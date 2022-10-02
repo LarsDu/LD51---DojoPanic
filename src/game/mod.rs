@@ -9,7 +9,7 @@ use movement::*;
 mod components;
 
 mod animation;
-use animation::*;
+//use animation::*;
 
 pub struct GamePlugin;
 
@@ -31,7 +31,7 @@ impl Plugin for GamePlugin {
 
 pub fn setup_lights(mut commands: Commands) {
     // Point light
-    commands.spawn_bundle(PointLightBundle {
+    commands.spawn(PointLightBundle {
         point_light: PointLight {
             intensity: 10000.0,
             radius: 15000.0,
@@ -43,7 +43,7 @@ pub fn setup_lights(mut commands: Commands) {
     });
 
     // Directional Light
-    commands.spawn_bundle(DirectionalLightBundle {
+    commands.spawn(DirectionalLightBundle {
         directional_light: DirectionalLight {
             illuminance: 15000.0,
             color: Color::WHITE,

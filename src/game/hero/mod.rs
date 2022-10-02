@@ -1,6 +1,6 @@
 use std::f32::consts::PI;
 
-use bevy::{input::keyboard::*, prelude::*};
+use bevy::{input::keyboard::*, prelude::*, utils::HashMap};
 
 use super::animation::*;
 use super::components::*;
@@ -11,82 +11,9 @@ impl Plugin for HeroPlugin {
     fn build(&self, app: &mut App) {
         app.add_startup_system(setup_hero)
             .add_system(init_animation)
-            .add_system(keyboard_state_transitioner)
-            .add_system(set_animation_direction.after(keyboard_state_transitioner));
-    }
-}
-
-fn keyboard_state_transitioner(
-    keyboard_input: Res<Input<KeyCode>>,
-    mut query: Query<(&mut Movement, &mut Transform), With<Hero>>,
-    //animations: Res<Animations>,
-    //mut animation_player: Query<&mut AnimationPlayer>,
-) {
-    //if let Ok(mut player) = animation_player.get_single_mut() {
-    // Insert and remove components based on keyboard input
-    let (mut movement, mut transform) = query.get_single_mut().expect("Error! Couldn't find hero");
-
-    if keyboard_input.just_pressed(KeyCode::Left) {
-        transform.look_at(Vec3::new(-100.0, 0.0, 0.0), Vec3::Y);
-        //player.play(animations.0[WALK_FORWARD].clone_weak()).repeat();
-        movement.look.x = -1.0;
-        //commands.entity(hero_entity).insert(Walk);
-    } else if keyboard_input.just_released(KeyCode::Left) {
-        //player.play(animations.0[STAND_FORWARD].clone_weak()).repeat();
-        movement.look.x = 0.0;
-        //commands.entity(hero_entity).insert(Stand);
-    }
-
-    if keyboard_input.just_pressed(KeyCode::Right) {
-        transform.look_at(Vec3::new(100.0, 0.0, 0.0), Vec3::Y);
-        if keyboard_input.pressed(KeyCode::Up) {
-            //player.play(animations.0[WALK_ANGLED].clone_weak()).repeat();
-        } else {
-            //player.play(animations.0[WALK_FORWARD].clone_weak()).repeat();
-        }
-        movement.look.x = 1.0;
-    } else if keyboard_input.just_released(KeyCode::Right) {
-        //player.play(animations.0[STAND_FORWARD].clone_weak()).repeat();
-        movement.look.x = 0.0;
-    }
-
-    // UP
-    if keyboard_input.just_pressed(KeyCode::Up) {
-        //player.play(animations.0[STAND_UP].clone_weak()).repeat();
-    } else if keyboard_input.just_released(KeyCode::Up) {
-        //player.play(animations.0[STAND_FORWARD].clone_weak()).repeat();
-    }
-
-    if keyboard_input.just_pressed(KeyCode::Space) {
-        movement.look.y = 1.0;
-    } else if keyboard_input.just_released(KeyCode::Space) {
-        movement.look.y = 0.0;
-    }
-    //}
-}
-
-fn set_animation_direction(
-    animations: Res<Animations>,
-    mut query: Query<(&mut Movement, &mut Transform), With<Hero>>,
-    mut animation_player: Query<&mut AnimationPlayer>,
-) {
-    if let Ok(mut animation_player) = animation_player.get_single_mut() {
-        for (movement, mut transform) in &mut query {
-            if movement.look.x.abs() > 0.0 {
-                animation_player
-                    .play(animations.0[WALK_FORWARD].clone_weak())
-                    .repeat();
-            } else {
-                animation_player
-                    .play(animations.0[STAND_FORWARD].clone_weak())
-                    .repeat();
-            }
-            //if movement.look.x > 0.0 {
-            //    transform.look_at(Vec3::new(100.0, 0.0, 0.0), Vec3::Y);
-            //} else if movement.look.x < 0.0 {
-            //    transform.look_at(Vec3::new(-100.0, 0.0, 0.0), Vec3::Y);
-           // }
-        }
+            .add_system(handle_input)
+            .add_system(set_animation.after(handle_input))
+            .add_system(set_rotation.after(handle_input));
     }
 }
 
@@ -106,10 +33,19 @@ pub fn setup_hero(
         asset_server.load("models/animated/dojoman.glb#Animation5"), //5 - walk angled
     ]));
 
+    let mut hero_animation_map = HashMap::<BasicAnimationState, usize>::from([
+        (BasicAnimationState::StandForward, 5),
+        (BasicAnimationState::StandUp, 1),
+        (BasicAnimationState::StandAngled, 0),
+        (BasicAnimationState::WalkForward, 2),
+        (BasicAnimationState::WalkUp, 4),
+        (BasicAnimationState::WalkAngled, 3),
+    ]);
+
     // Load the model
     let dojoman = asset_server.load("models/animated/dojoman.glb#Scene0");
     commands
-        .spawn_bundle(SceneBundle {
+        .spawn(SceneBundle {
             scene: dojoman,
             transform: Transform::from_xyz(0.0, 0.0, 0.0).with_rotation(Quat::from_euler(
                 EulerRot::XYZ,
@@ -121,8 +57,100 @@ pub fn setup_hero(
         })
         .insert(Hero)
         .insert(Movement {
+            has_state_changed: true,
             look: Vec2::new(0.0, 0.0),
+        })
+        .insert(BasicAnimation {
+            play_speed: 2.0,
+            state: BasicAnimationState::StandForward,
+            index_map: hero_animation_map,
         });
+}
+
+fn handle_input(
+    keyboard_input: Res<Input<KeyCode>>,
+    mut query: Query<&mut Movement, With<Hero>>,
+) {
+    let mut movement =
+        query.get_single_mut().expect("Error! Couldn't find hero");
+
+    let prev_look = movement.look.clone();
+
+    if keyboard_input.just_pressed(KeyCode::Left) {
+        movement.look.x = -1.0;
+    } else if keyboard_input.just_released(KeyCode::Left) {
+        movement.look.x = 0.0;
+    }
+
+    if keyboard_input.just_pressed(KeyCode::Right) {
+        movement.look.x = 1.0;
+    } else if keyboard_input.just_released(KeyCode::Right) {
+        movement.look.x = 0.0;
+    }
+
+    // UP
+    if keyboard_input.just_pressed(KeyCode::Up) {
+        movement.look.y = 1.0;
+    } else if keyboard_input.just_released(KeyCode::Up) {
+        movement.look.y = 0.0;
+    }
+
+    if keyboard_input.just_pressed(KeyCode::Space) {
+    } else if keyboard_input.just_released(KeyCode::Space) {
+    }
+    
+    movement.has_state_changed = prev_look != movement.look;
+    
+}
+
+fn set_animation(
+    animations: Res<Animations>,
+    mut query: Query<(&mut Movement, &BasicAnimation), With<Hero>>,
+    mut animation_player: Query<&mut AnimationPlayer>,
+) {
+    if let Ok(mut animation_player) = animation_player.get_single_mut() {
+        for (movement, basic_animation) in &mut query {
+            if !movement.has_state_changed {
+                continue;
+            }
+
+            let mut state = BasicAnimationState::StandForward;
+
+            if movement.look.x.abs() > 0.0 && movement.look.y == 0.0 {
+                // Play Walk animation
+                state = BasicAnimationState::WalkForward;
+            } else if movement.look.x == 0.0 && movement.look.y.abs() > 0.0{
+                state = BasicAnimationState::StandUp;
+            } else if movement.look.x.abs() > 0.0 && movement.look.y.abs() > 0.0{
+                state = BasicAnimationState::WalkAngled;
+            }
+
+            // Play selected animation
+            if let Some(i) = basic_animation
+                .index_map
+                .get(&state)
+            {
+                //println!("{}",animation_player.speed());
+                //let speed = animation_player.speed();
+                //animation_player.set_speed( speed * 1.2);
+                animation_player.play(animations.0[*i].clone_weak()).repeat();
+            }
+        }
+    }
+}
+
+fn set_rotation(mut query: Query<(&mut Movement, &mut Transform), With<Hero>>) {
+    for (movement, mut transform) in &mut query {
+        if !movement.has_state_changed {
+            continue;
+        }
+
+        if movement.look.x > 0.0 {
+            transform.look_at(Vec3::new(10000.0, 0.0, 0.0), Vec3::Y);
+        } else if movement.look.x < 0.0 {
+            transform.look_at(Vec3::new(-10000.0, 0.0, 0.0), Vec3::Y);
+        }
+    }
 }
 
 // Once the scene is loaded, start the animation
@@ -135,50 +163,6 @@ fn init_animation(
         if let Ok(mut player) = player.get_single_mut() {
             player.play(animations.0[0].clone_weak()).repeat();
             *done = true;
-        }
-    }
-}
-
-fn keyboard_animation_control(
-    keyboard_input: Res<Input<KeyCode>>,
-    mut animation_player: Query<&mut AnimationPlayer>,
-    animations: Res<Animations>,
-    mut current_animation: Local<usize>,
-) {
-    if let Ok(mut player) = animation_player.get_single_mut() {
-        if keyboard_input.just_pressed(KeyCode::Space) {
-            if player.is_paused() {
-                player.resume();
-            } else {
-                player.pause();
-            }
-        }
-
-        if keyboard_input.just_pressed(KeyCode::Up) {
-            let speed = player.speed();
-            player.set_speed(speed * 1.2);
-        }
-
-        if keyboard_input.just_pressed(KeyCode::Down) {
-            let speed = player.speed();
-            player.set_speed(speed * 0.8);
-        }
-
-        if keyboard_input.just_pressed(KeyCode::Left) {
-            let elapsed = player.elapsed();
-            player.set_elapsed(elapsed - 0.1);
-        }
-
-        if keyboard_input.just_pressed(KeyCode::Right) {
-            let elapsed = player.elapsed();
-            player.set_elapsed(elapsed + 0.1);
-        }
-
-        if keyboard_input.just_pressed(KeyCode::Return) {
-            *current_animation = (*current_animation + 1) % animations.0.len();
-            player
-                .play(animations.0[*current_animation].clone_weak())
-                .repeat();
         }
     }
 }
