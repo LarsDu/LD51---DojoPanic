@@ -6,22 +6,33 @@ use hero::*;
 mod movement;
 use movement::*;
 
+mod tilemap;
+use tilemap::*;
+
+mod enemy;
+use enemy::*;
+
+mod spawner;
+use spawner::*;
+
+
 mod components;
 
 mod animation;
 //use animation::*;
+
+use super::constants::*;
 
 pub struct GamePlugin;
 
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
         app.add_startup_system(setup_lights)
-        .add_plugin(HeroPlugin)
-        .add_plugin(MovementPlugin);
-            //.add_plugin(TileMapPlugin)
-            //.add_plugin(HeroPlugin)
-            //.add_plugin(EnemyPlugin)
-            //.add_plugin(BulletPlugin)
+            .add_plugin(HeroPlugin)
+            .add_plugin(MovementPlugin)
+            .add_plugin(TilemapPlugin)
+            .add_plugin(EnemyPlugin)
+            .add_plugin(SpawnerPlugin);
     }
 }
 

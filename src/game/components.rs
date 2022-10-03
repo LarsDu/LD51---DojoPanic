@@ -1,5 +1,5 @@
 
-use bevy::{prelude::*, utils::HashMap};
+use bevy::prelude::*;
 use super::animation::*;
 #[derive(Component)]
 pub struct Hero;
@@ -14,21 +14,19 @@ pub struct Movement{
 
 #[derive(Component)]
 pub struct BasicAnimation{
-    pub state: BasicAnimationState,
+    pub clip_indices: AnimationClipIndices,
     pub play_speed: f32,
-    pub index_map: HashMap<BasicAnimationState, usize>
-
-
 }
 
 #[derive(Component)]
-pub struct Jump;
+pub struct Air;
 
 #[derive(Component)]
-pub struct Walk;
+pub struct Grounded;
 
-#[derive(Component)]
-pub struct Stand;
 
 #[derive(Component)]
 pub struct Weapon;
+
+#[derive(Component)]
+pub struct Enemy;

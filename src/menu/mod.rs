@@ -174,12 +174,12 @@ fn main_menu_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                 .insert(MenuButtonAction::Quit)
                 .with_children(|parent| {
                     let icon = asset_server.load("textures/Game Icons/exitRight.png");
-                    parent.spawn(ImageBundle {
+                    parent.spawn_bundle(ImageBundle {
                         style: button_icon_style,
                         image: UiImage(icon),
                         ..default()
                     });
-                    parent.spawn(TextBundle::from_section("Quit", button_text_style));
+                    parent.spawn_bundle(TextBundle::from_section("Quit", button_text_style));
                 });
         });
 }
