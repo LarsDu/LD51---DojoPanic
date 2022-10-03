@@ -10,11 +10,11 @@ struct OnMainMenuScreen;
 impl Plugin for MenuPlugin {
     fn build(&self, app: &mut App) {
         app
-            //.add_startup_system(setup_camera) //FIXME: Despawn menu camera where appropriate
+            //.add_startup_system(setup_camera) //FIXME: Despawn_bundle menu camera where appropriate
             //.add_system_set(SystemSet::on_enter(AppState::Menu).with_system(switch_to_main_menu))
             .add_state(MenuState::Main)
             .add_system_set(
-                SystemSet::on_exit(MenuState::Main).with_system(despawn_screen::<OnMainMenuScreen>),
+                SystemSet::on_exit(MenuState::Main).with_system(despawn_bundle_screen::<OnMainMenuScreen>),
             )
             .add_system_set(SystemSet::on_enter(MenuState::Main).with_system(main_menu_setup))
             .add_system_set(
@@ -51,7 +51,7 @@ enum MenuButtonAction {
 // This system handles changing all buttons color based on mouse interaction
 fn button_system(
     mut interaction_query: Query<
-        (&Interaction, &mut BackgroundColor, Option<&SelectedOption>),
+        (&Interaction, &mut UiColor, Option<&SelectedOption>),
         (Changed<Interaction>, With<Button>),
     >,
 ) {
@@ -117,20 +117,20 @@ fn main_menu_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     };
 
     commands
-        .spawn(NodeBundle {
+        .spawn_bundle(NodeBundle {
             style: Style {
                 margin: UiRect::all(Val::Auto),
                 flex_direction: FlexDirection::ColumnReverse,
                 align_items: AlignItems::Center,
                 ..default()
             },
-            background_color: BackgroundColor::from(Color::ALICE_BLUE),
+            //background_color: BackgroundColor::from(Color::ALICE_BLUE),
             ..default()
         })
         .insert(OnMainMenuScreen)
         .with_children(|parent| {
             // Display the game name
-            parent.spawn(
+            parent.spawn_bundle(
                 TextBundle::from_section(
                     TITLE,
                     TextStyle {
@@ -149,26 +149,28 @@ fn main_menu_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
             // - Play
             // - quit
             parent
-                .spawn(ButtonBundle {
+                .spawn_bundle(ButtonBundle {
                     style: button_style.clone(),
-                    background_color: NORMAL_BUTTON.into(),
+                    color: Color::ALICE_BLUE.into(),
+                    //background_color: NORMAL_BUTTON.into(),
                     ..default()
                 })
                 .insert(MenuButtonAction::Play)
                 .with_children(|parent| {
                     let icon = asset_server.load("textures/Game Icons/right.png");
-                    parent.spawn(ImageBundle {
+                    parent.spawn_bundle(ImageBundle {
                         style: button_icon_style.clone(),
                         image: UiImage(icon),
                         ..default()
                     });
                     parent
-                        .spawn(TextBundle::from_section("Play", button_text_style.clone()));
+                        .spawn_bundle(TextBundle::from_section("Play", button_text_style.clone()));
                 });
             parent
-                .spawn(ButtonBundle {
+                .spawn_bundle(ButtonBundle {
                     style: button_style,
-                    background_color: NORMAL_BUTTON.into(),
+                    color: Color::ALICE_BLUE.into(),
+                    //background_color: NORMAL_BUTTON.into(),
                     ..default()
                 })
                 .insert(MenuButtonAction::Quit)
@@ -184,8 +186,9 @@ fn main_menu_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         });
 }
 
-fn despawn_screen<T: Component>(to_despawn: Query<Entity, With<T>>, mut commands: Commands) {
-    for entity in &to_despawn {
+fn despawn_bundle_screen<T: Component>(to_despawn_bundle: Query<Entity, With<T>>, mut commands: Commands) {
+    for entity in &to_despawn_bundle {
+        //commands.entity(entity).despawn_bundle_recursive();
         commands.entity(entity).despawn_recursive();
     }
 }

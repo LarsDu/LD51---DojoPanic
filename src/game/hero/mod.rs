@@ -38,7 +38,7 @@ fn setup_hero(
     // Load the model
     let dojoman = asset_server.load("models/animated/dojoman.glb#Scene0");
     commands
-        .spawn(SceneBundle {
+        .spawn_bundle(SceneBundle {
             scene: dojoman,
             transform: Transform::from_xyz(0.0, 0.0, 0.0).with_rotation(Quat::from_euler(
                 EulerRot::XYZ,

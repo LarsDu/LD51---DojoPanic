@@ -42,7 +42,7 @@ impl Plugin for GamePlugin {
 
 pub fn setup_lights(mut commands: Commands) {
     // Point light
-    commands.spawn(PointLightBundle {
+    commands.spawn_bundle(PointLightBundle {
         point_light: PointLight {
             intensity: 10000.0,
             radius: 15000.0,
@@ -54,7 +54,7 @@ pub fn setup_lights(mut commands: Commands) {
     });
 
     // Directional Light
-    commands.spawn(DirectionalLightBundle {
+    commands.spawn_bundle(DirectionalLightBundle {
         directional_light: DirectionalLight {
             illuminance: 15000.0,
             color: Color::WHITE,

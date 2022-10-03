@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-#[derive(Resource)]
+//#[derive(Resource)]
 pub struct Animations(pub Vec<Handle<AnimationClip>>);
 
 pub struct AnimationClipIndices{

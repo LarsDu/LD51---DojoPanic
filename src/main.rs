@@ -39,7 +39,7 @@ pub fn setup_camera(mut commands: Commands) {
     }
     );*/
     // Bevy 2d camera is at Z=999.9
-    commands.spawn(Camera3dBundle {
+    commands.spawn_bundle(Camera3dBundle {
         transform: Transform::from_xyz(0.0, 0.0, 160.0).looking_at(Vec3::ZERO, Vec3::Y),
         ..default()
     });
